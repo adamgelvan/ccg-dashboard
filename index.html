@@ -294,7 +294,11 @@ const pctTxt=(n,d)=>d?Math.round(100*n/d)+"%":"—";
 
 /* ================= render: KPIs ================= */
 const KPIS=[["Connects",m=>m.c,0],["Presentations",m=>m.p,0],["Quotes",m=>m.q,0],
-            ["Sales",m=>m.sold,4],["Close Rate",m=>pct(m.sold,m.q),4,"%"],["ACA Transfers",m=>m.aca,2]];
+            ["Sales",m=>m.sold,4],["Close Rate",m=>pct(m.sold,m.q),4,"%"],["ACA Transfers",m=>m.aca,2],
+            ["ACA Transfer %",m=>pct(m.aca,m.c),2,"%"],
+            ["Connects → Quote %",m=>pct(m.q,m.c),3,"%"],
+            ["Connects → Sale %",m=>pct(m.sold,m.c),4,"%"],
+            ["Pres → Sale %",m=>pct(m.sold,m.p),4,"%"]];
 function spark(vals,color){const w=64,h=26;if(!vals.length||Math.max(...vals)===0)return"";
   const mx=Math.max(...vals),pts=vals.map((v,i)=>`${(i/(vals.length-1||1))*w},${h-3-(v/mx)*(h-6)}`).join(" ");
   return `<svg class="spark" width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" opacity=".7"/></svg>`;}
