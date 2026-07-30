@@ -402,6 +402,10 @@ const LB_COLS=[
   ["c","Connects",r=>r.c],["p","Pres",r=>r.p],["presPct","Pres%",r=>pct(r.p,r.c)],
   ["q","Quotes",r=>r.q],["quotePct","Quote%",r=>pct(r.q,r.p)],
   ["sold","Sales",r=>r.sold],["closePct","Close%",r=>pct(r.sold,r.q)],["aca","ACA",r=>r.aca],
+  ["acaPct","ACA%",r=>pct(r.aca,r.c)],
+  ["cqPct","C→Q%",r=>pct(r.q,r.c)],
+  ["csPct","C→S%",r=>pct(r.sold,r.c)],
+  ["psPct","P→S%",r=>pct(r.sold,r.p)],
 ];
 let lbSortKey="sold", lbSortDir=-1;   // -1 = highest first (shown as ▲), +1 = lowest first (▼)
 function lbSort(rows){
@@ -432,7 +436,7 @@ function renderLB(a,b,pa,pb){
     const[a2,b2]=rangeBounds(range),[pa2,pb2]=prevBounds(a2,b2);
     renderLB(a2,b2,pa2,pb2);
   };
-  if(!rows.length){body.innerHTML=`<tr><td colspan="11"><div class="empty">no calls in range</div></td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="15"><div class="empty">no calls in range</div></td></tr>`;return;}
   const maxSold=Math.max(...rows.map(r=>r.sold),1);
   body.innerHTML=rows.map((r,i)=>{
     const rk=i+1,pr=prevRank[r.id];
@@ -448,6 +452,8 @@ function renderLB(a,b,pa,pb){
       <td>${r.c}</td><td>${r.p}</td><td>${pctTxt(r.p,r.c)}</td>
       <td>${r.q}</td><td>${pctTxt(r.q,r.p)}</td>
       <td style="color:${color};font-weight:700">${r.sold}</td><td>${pctTxt(r.sold,r.q)}</td><td>${r.aca}</td>
+      <td>${pctTxt(r.aca,r.c)}</td><td>${pctTxt(r.q,r.c)}</td>
+      <td>${pctTxt(r.sold,r.c)}</td><td>${pctTxt(r.sold,r.p)}</td>
       ${compare?`<td class="prevcol">${pv}</td>`:""}</tr>`;}).join("");
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     body.querySelectorAll(".salesbar i").forEach(el=>el.style.width=el.dataset.w+"%");}));
