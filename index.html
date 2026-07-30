@@ -47,6 +47,8 @@
   .live{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--glow-cyan);
         border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;background:rgba(56,189,248,.06)}
   .live .dot{width:8px;height:8px;border-radius:50%;background:var(--glow-cyan);animation:pulse 1.6s ease-out infinite}
+  .live.stale{color:#F59E0B;border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.07)}
+  .live.stale .dot{background:#F59E0B;animation:none}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(56,189,248,.6)}100%{box-shadow:0 0 0 12px rgba(56,189,248,0)}}
   .spacer{flex:1}
   .clock{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:.06em}
@@ -171,7 +173,7 @@
 <div class="wrap" id="app">
   <header>
     <div class="brand">CCG<em>//</em>COMMAND</div>
-    <div class="live"><span class="dot"></span>LIVE</div>
+    <div class="live" id="livebadge"><span class="dot"></span><span id="livetext">LIVE</span></div>
     <div class="spacer"></div>
     <div class="sync">
       <svg class="ring" viewBox="0 0 30 30"><circle class="track" cx="15" cy="15" r="12"/><circle class="prog" id="ringprog" cx="15" cy="15" r="12" stroke-dasharray="75.4" stroke-dashoffset="0"/></svg>
@@ -260,7 +262,7 @@ const todayET=()=>fmtET.format(new Date());
 function addDays(ds,n){const d=new Date(ds+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
 function dow(ds){return (new Date(ds+"T12:00:00Z").getUTCDay()+6)%7;} // 0=Mon
 function rangeBounds(r){
-  const t=DATA?.today||todayET();
+  const t=todayET();   // real clock, never the feed's stamp — a stale feed must not shift "today"
   if(r==="today")return[t,t];
   if(r==="yesterday"){const y=addDays(t,-1);return[y,y];}
   if(r==="wtd"){return[addDays(t,-dow(t)),t];}
@@ -335,7 +337,7 @@ function renderTrend(a,b){
   const svg=document.getElementById("trend"),tip=document.getElementById("tooltip");
   const W=svg.clientWidth||760,H=240,padL=34,padR=14,padT=14,padB=26;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  const hourly=(range==="today")&&DATA.today_hourly.length>0;
+  const hourly=(range==="today")&&DATA.today===todayET()&&DATA.today_hourly.length>0;
   document.getElementById("trendmode").textContent=hourly?"TODAY · HOURLY":"DAILY";
   let labels,connects,sales;
   if(hourly){labels=DATA.today_hourly.map(x=>String(x.h).padStart(2,"0")+":00");
@@ -548,6 +550,14 @@ async function loadData(first){
     const changed=!DATA||d.generated_at!==DATA.generated_at;
     DATA=d;
     document.getElementById("updated").textContent=(d.generated_at||"").slice(11,19)||"—";
+    // Staleness badge: LIVE only when the feed is fresh; otherwise say how far behind.
+    const badge=document.getElementById("livebadge"),lt=document.getElementById("livetext");
+    const gen=Date.parse(d.generated_at||0);
+    const lagMin=gen?Math.round((Date.now()-gen)/60000):null;
+    if(lagMin!==null&&lagMin>15){
+      badge.classList.add("stale");
+      lt.textContent=lagMin>=120?`DATA ${Math.round(lagMin/60)}h BEHIND — CATCHING UP`:`DATA ${lagMin}m BEHIND`;
+    }else{badge.classList.remove("stale");lt.textContent="LIVE";}
     if(changed||first)render();
   }catch(e){document.getElementById("updated").textContent="offline";}
 }
