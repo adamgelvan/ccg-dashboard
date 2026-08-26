@@ -179,7 +179,11 @@ function tick(){
 }
 tick(); setInterval(tick,1000);
 
-/* ---------- live pulse: DashData published CSV (same feed as The Command) ---------- */
+/* ---------- live pulse ----------
+   Primary: the pipeline pushes its data to the ccg-sales-feed Worker every
+   cycle (~5 min fresh). Fallback: the DashData published CSV (Google's
+   publish-to-web cache adds ~5 more minutes of lag). */
+const PULSE_URL = "https://ccg-sales-feed.adamgelvaninsurance.workers.dev/pulse";
 const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXuRIJ7iOYNP8vqz4MTOHovQs8G061ee_CYp1cGV6Hyese3bSAxoUhgfWj7G1Nxrm0tUuzg3XWTPTp/pub?gid=801455380&single=true&output=csv";
 
 function parseCSV(text){
@@ -202,23 +206,36 @@ function mondayOf(dstr){
   return d.toISOString().slice(0,10);
 }
 const fmt=n=>n.toLocaleString("en-US");
+async function fetchPulseData(){
+  // Worker relay first — freshest source
+  try{
+    const r=await fetch(PULSE_URL+"?t="+Date.now(),{cache:"no-store"});
+    if(r.ok){
+      const d=await r.json();
+      if(d && Array.isArray(d.daily) && d.daily.length)
+        return {generated:d.generated_at||"", today:d.today||"", daily:d.daily};
+    }
+  }catch(e){ /* fall through to the published CSV */ }
+  const res=await fetch(DATA_URL+"&t="+Date.now(),{cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const rows=parseCSV(await res.text());
+  const head=rows[0]||[];
+  const ix=Object.fromEntries(head.map((h,i)=>[h.trim(),i]));
+  let generated="",today="";
+  const daily=[];
+  for(const r of rows.slice(1)){
+    const kind=(r[ix.kind]||"").trim();
+    if(kind==="meta"){ generated=r[ix.d]||""; today=r[ix.s]||""; }
+    else if(kind==="daily"){
+      daily.push({d:(r[ix.d]||"").trim(),
+        c:+r[ix.c]||0,p:+r[ix.p]||0,q:+r[ix.q]||0,sold:+r[ix.sold]||0});
+    }
+  }
+  return {generated,today,daily};
+}
 async function pulse(){
   try{
-    const res=await fetch(DATA_URL+"&t="+Date.now(),{cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP "+res.status);
-    const rows=parseCSV(await res.text());
-    const head=rows[0]||[];
-    const ix=Object.fromEntries(head.map((h,i)=>[h.trim(),i]));
-    let generated="",today="";
-    const daily=[];
-    for(const r of rows.slice(1)){
-      const kind=(r[ix.kind]||"").trim();
-      if(kind==="meta"){ generated=r[ix.d]||""; today=r[ix.s]||""; }
-      else if(kind==="daily"){
-        daily.push({d:(r[ix.d]||"").trim(),
-          c:+r[ix.c]||0,p:+r[ix.p]||0,q:+r[ix.q]||0,sold:+r[ix.sold]||0});
-      }
-    }
+    let {generated,today,daily}=await fetchPulseData();
     if(!today && daily.length) today=daily.map(r=>r.d).sort().pop();
     const wk=mondayOf(today);
     const t={c:0,p:0,q:0,sold:0}, w={c:0,p:0,q:0,sold:0};
