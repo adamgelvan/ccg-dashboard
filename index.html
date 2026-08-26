@@ -227,7 +227,7 @@ async function fetchPulseData(){
     const kind=(r[ix.kind]||"").trim();
     if(kind==="meta"){ generated=r[ix.d]||""; today=r[ix.s]||""; }
     else if(kind==="daily"){
-      daily.push({d:(r[ix.d]||"").trim(),
+      daily.push({d:(r[ix.d]||"").trim(),s:(r[ix.s]||"").trim(),
         c:+r[ix.c]||0,p:+r[ix.p]||0,q:+r[ix.q]||0,sold:+r[ix.sold]||0});
     }
   }
@@ -238,8 +238,11 @@ async function pulse(){
     let {generated,today,daily}=await fetchPulseData();
     if(!today && daily.length) today=daily.map(r=>r.d).sort().pop();
     const wk=mondayOf(today);
+    // daily rows repeat per scope (a=agent, q=queue, t=total) — use totals only
+    const totals=daily.filter(r=>r.s==="t");
+    const rowsToSum=totals.length?totals:daily.filter(r=>r.s==="a");
     const t={c:0,p:0,q:0,sold:0}, w={c:0,p:0,q:0,sold:0};
-    for(const r of daily){
+    for(const r of rowsToSum){
       if(r.d===today){t.c+=r.c;t.p+=r.p;t.q+=r.q;t.sold+=r.sold;}
       if(r.d>=wk && r.d<=today){w.c+=r.c;w.p+=r.p;w.q+=r.q;w.sold+=r.sold;}
     }
