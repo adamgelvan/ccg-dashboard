@@ -55,11 +55,12 @@ h1 span{color:var(--cyan)}
 .stat .lbl{font-size:10px;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
 .stat .val{font-family:var(--mono);font-size:28px;font-weight:700;margin-top:6px}
 .stat .wk{font-size:11px;color:var(--ink-3);margin-top:4px;font-family:var(--mono)}
-.stat.calls .val{color:var(--cyan)}
-.stat.pres .val{color:var(--ink)}
-.stat.quotes .val{color:var(--gold)}
-.stat.sold .val{color:var(--green)}
-.stat.close .val{color:var(--purple)}
+.stat.spend .val{color:var(--red)}
+.stat.sales .val{color:var(--green)}
+.stat.cpa .val{color:var(--gold)}
+.stat.prem .val{color:var(--cyan)}
+.stat.roi .val{color:var(--purple)}
+.striphead .weekof{letter-spacing:.05em;font-family:var(--mono);text-transform:none;color:var(--ink-3)}
 
 /* ---------- cards ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
@@ -116,15 +117,15 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
     <div class="clock"><b id="clock">--:--:--</b><small>Eastern</small></div>
   </header>
 
-  <!-- live pulse from the call-analytics pipeline -->
+  <!-- live pulse: weekly CPA sheet + daily deals, via the pipeline's /pulse relay -->
   <section class="strip">
-    <div class="striphead"><span class="dot"></span> Today's Pulse — Call Analytics Pipeline <span class="when" id="when">connecting…</span></div>
+    <div class="striphead"><span class="dot"></span> Today's Pulse — Spend &amp; ROI <span class="weekof" id="weekof"></span> <span class="when" id="when">connecting…</span></div>
     <div class="stats">
-      <div class="stat calls"><div class="lbl">Calls</div><div class="val" id="s-c">—</div><div class="wk" id="w-c"></div></div>
-      <div class="stat pres"><div class="lbl">Presentations</div><div class="val" id="s-p">—</div><div class="wk" id="w-p"></div></div>
-      <div class="stat quotes"><div class="lbl">Quotes</div><div class="val" id="s-q">—</div><div class="wk" id="w-q"></div></div>
-      <div class="stat sold"><div class="lbl">Sold</div><div class="val" id="s-s">—</div><div class="wk" id="w-s"></div></div>
-      <div class="stat close"><div class="lbl">Close Rate</div><div class="val" id="s-r">—</div><div class="wk" id="w-r"></div></div>
+      <div class="stat spend"><div class="lbl">Spend</div><div class="val" id="s-spend">—</div><div class="wk">this week</div></div>
+      <div class="stat sales"><div class="lbl">Sales</div><div class="val" id="s-sales">—</div><div class="wk" id="w-sales">today</div></div>
+      <div class="stat cpa"><div class="lbl">CPA</div><div class="val" id="s-cpa">—</div><div class="wk">this week</div></div>
+      <div class="stat prem"><div class="lbl">Avg Premium</div><div class="val" id="s-prem">—</div><div class="wk" id="w-prem">today</div></div>
+      <div class="stat roi"><div class="lbl">ROI</div><div class="val" id="s-roi">—</div><div class="wk" id="w-roi">this week</div></div>
     </div>
   </section>
 
@@ -184,73 +185,32 @@ tick(); setInterval(tick,1000);
    cycle (~5 min fresh). Fallback: the DashData published CSV (Google's
    publish-to-web cache adds ~5 more minutes of lag). */
 const PULSE_URL = "https://ccg-sales-feed.adamgelvaninsurance.workers.dev/pulse";
-const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXuRIJ7iOYNP8vqz4MTOHovQs8G061ee_CYp1cGV6Hyese3bSAxoUhgfWj7G1Nxrm0tUuzg3XWTPTp/pub?gid=801455380&single=true&output=csv";
 
-function parseCSV(text){
-  const rows=[]; let row=[],cur="",q=false;
-  for(let i=0;i<text.length;i++){
-    const ch=text[i];
-    if(q){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=ch; }
-    else if(ch==='"') q=true;
-    else if(ch===','){row.push(cur);cur="";}
-    else if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur="";}
-    else if(ch!=='\r') cur+=ch;
-  }
-  if(cur!==""||row.length){row.push(cur);rows.push(row);}
-  return rows;
-}
-function mondayOf(dstr){
-  const d=new Date(dstr+"T12:00:00");
-  const day=(d.getDay()+6)%7;           // 0=Mon
-  d.setDate(d.getDate()-day);
-  return d.toISOString().slice(0,10);
-}
 const fmt=n=>n.toLocaleString("en-US");
-async function fetchPulseData(){
-  // Worker relay first — freshest source
-  try{
-    const r=await fetch(PULSE_URL+"?t="+Date.now(),{cache:"no-store"});
-    if(r.ok){
-      const d=await r.json();
-      if(d && Array.isArray(d.daily) && d.daily.length)
-        return {generated:d.generated_at||"", today:d.today||"", daily:d.daily};
-    }
-  }catch(e){ /* fall through to the published CSV */ }
-  const res=await fetch(DATA_URL+"&t="+Date.now(),{cache:"no-store"});
-  if(!res.ok) throw new Error("HTTP "+res.status);
-  const rows=parseCSV(await res.text());
-  const head=rows[0]||[];
-  const ix=Object.fromEntries(head.map((h,i)=>[h.trim(),i]));
-  let generated="",today="";
-  const daily=[];
-  for(const r of rows.slice(1)){
-    const kind=(r[ix.kind]||"").trim();
-    if(kind==="meta"){ generated=r[ix.d]||""; today=r[ix.s]||""; }
-    else if(kind==="daily"){
-      daily.push({d:(r[ix.d]||"").trim(),s:(r[ix.s]||"").trim(),
-        c:+r[ix.c]||0,p:+r[ix.p]||0,q:+r[ix.q]||0,sold:+r[ix.sold]||0});
-    }
-  }
-  return {generated,today,daily};
-}
 async function pulse(){
   try{
-    let {generated,today,daily}=await fetchPulseData();
-    if(!today && daily.length) today=daily.map(r=>r.d).sort().pop();
-    const wk=mondayOf(today);
-    // daily rows repeat per scope (a=agent, q=queue, t=total) — use totals only
-    const totals=daily.filter(r=>r.s==="t");
-    const rowsToSum=totals.length?totals:daily.filter(r=>r.s==="a");
-    const t={c:0,p:0,q:0,sold:0}, w={c:0,p:0,q:0,sold:0};
-    for(const r of rowsToSum){
-      if(r.d===today){t.c+=r.c;t.p+=r.p;t.q+=r.q;t.sold+=r.sold;}
-      if(r.d>=wk && r.d<=today){w.c+=r.c;w.p+=r.p;w.q+=r.q;w.sold+=r.sold;}
-    }
+    let {generated,cpa}=await (async()=>{
+      const r=await fetch(PULSE_URL+"?t="+Date.now(),{cache:"no-store"});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      const d=await r.json();
+      return {generated:d.generated_at||"", cpa:d.cpa||null};
+    })();
+    if(cpa) lastCpa=cpa;            // keep last good numbers through blips
+    const c=lastCpa;
+    if(!c){ document.getElementById("when").textContent="waiting for data"; return; }
     const set=(id,v)=>document.getElementById(id).textContent=v;
-    set("s-c",fmt(t.c)); set("s-p",fmt(t.p)); set("s-q",fmt(t.q)); set("s-s",fmt(t.sold));
-    set("s-r", t.q? Math.round(100*t.sold/t.q)+"%" : "—");
-    set("w-c","wk "+fmt(w.c)); set("w-p","wk "+fmt(w.p)); set("w-q","wk "+fmt(w.q)); set("w-s","wk "+fmt(w.sold));
-    set("w-r", w.q? "wk "+Math.round(100*w.sold/w.q)+"%" : "");
+    const usd=(n,dec=0)=>"$"+n.toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+    set("s-spend",usd(c.spend_wk));
+    set("s-sales",fmt(c.deals_today));
+    set("w-sales","wk "+fmt(c.deals_wk));
+    set("s-cpa",usd(c.cpa_wk_sheet));
+    set("s-prem",c.deals_today?usd(c.prem_today/c.deals_today,0):"—");
+    set("w-prem",c.deals_wk?"wk "+usd(c.prem_wk/c.deals_wk,0):"");
+    const roi=c.spend_wk>0?100*(c.rev_wk-c.spend_wk)/c.spend_wk:null;
+    set("s-roi",roi===null?"—":(roi>=0?"+":"")+Math.round(roi)+"%");
+    set("w-roi","wk · rev "+usd(c.rev_wk));
+    const ws=new Date(c.week_start+"T12:00:00");
+    document.getElementById("weekof").textContent="· week of "+(ws.getMonth()+1)+"/"+ws.getDate();
     let when="live";
     if(generated){
       const g=new Date(generated);
@@ -258,9 +218,10 @@ async function pulse(){
     }
     document.getElementById("when").textContent=when;
   }catch(e){
-    document.getElementById("when").textContent="feed offline";
+    document.getElementById("when").textContent=lastCpa?"reconnecting…":"feed offline";
   }
 }
+let lastCpa=null;
 pulse(); setInterval(pulse,60000);
 </script>
 </body>
