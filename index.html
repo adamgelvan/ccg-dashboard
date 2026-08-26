@@ -72,16 +72,16 @@ a.card{
 }
 a.card:hover{transform:translateY(-5px);box-shadow:0 22px 60px rgba(0,0,0,.55)}
 a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:.9}
-.card.octagon::before{background:linear-gradient(90deg,var(--red),var(--gold))}
+.card.octagon::before,.card.warroom::before{background:linear-gradient(90deg,var(--red),var(--gold))}
 .card.command::before{background:linear-gradient(90deg,var(--cyan),var(--purple))}
 .card.cpa::before{background:linear-gradient(90deg,var(--gold),var(--green))}
-.card.octagon:hover{border-color:rgba(239,68,68,.45)}
+.card.octagon:hover,.card.warroom:hover{border-color:rgba(239,68,68,.45)}
 .card.command:hover{border-color:rgba(56,189,248,.45)}
 .card.cpa:hover{border-color:rgba(245,197,66,.45)}
 .emblem{font-size:38px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
 .card h2{font-size:19px;letter-spacing:.08em;font-weight:800;text-transform:uppercase}
 .card .tag{font-size:10px;letter-spacing:.26em;text-transform:uppercase;margin-top:4px}
-.card.octagon .tag{color:var(--red)}
+.card.octagon .tag,.card.warroom .tag{color:var(--red)}
 .card.command .tag{color:var(--cyan)}
 .card.cpa .tag{color:var(--gold)}
 .card p{color:var(--ink-2);font-size:13.5px;line-height:1.6;margin-top:12px;min-height:64px}
@@ -91,14 +91,6 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 }
 .card .go b{transition:transform .2s}
 a.card:hover .go b{transform:translateX(5px)}
-.alt{
-  position:relative;z-index:2;display:inline-flex;align-items:center;gap:6px;margin-top:14px;margin-right:10px;
-  padding:7px 13px;border:1px solid var(--line);border-radius:999px;
-  font-size:11px;letter-spacing:.12em;color:var(--ink-2);text-decoration:none;
-  transition:border-color .2s,color .2s;background:rgba(255,255,255,.02);
-}
-.alt:hover{border-color:var(--red);color:var(--ink)}
-.card.command .alt:hover{border-color:var(--cyan)}
 
 footer{margin-top:44px;display:flex;gap:18px;flex-wrap:wrap;color:var(--ink-3);font-size:11px;font-family:var(--mono);letter-spacing:.05em}
 footer span::before{content:"◆ ";color:var(--ink-3)}
@@ -143,8 +135,15 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
       <h2>The Octagon</h2>
       <div class="tag">Fight-Night Leaderboard</div>
       <p>The championship board for the office TV — live standings, KO animations, rockets, memes and air horns every time a policy closes.</p>
-      <span class="go">ENTER THE OCTAGON <b>→</b></span><br>
-      <a class="alt" href="https://adamgelvan.github.io/octagon-leaderboard/warroom/">📋 WAR ROOM — weekly grid</a>
+      <span class="go">ENTER THE OCTAGON <b>→</b></span>
+    </a>
+
+    <a class="card warroom" href="https://adamgelvan.github.io/octagon-leaderboard/warroom/">
+      <div class="emblem">📋</div>
+      <h2>The War Room</h2>
+      <div class="tag">Weekly Fight Stats</div>
+      <p>The one-screen weekly battle grid — every agent, every day, premium and deal counts side by side, with week totals, the champion's belt, and a time machine for past weeks.</p>
+      <span class="go">ENTER THE WAR ROOM <b>→</b></span>
     </a>
 
     <a class="card command" href="command/">
