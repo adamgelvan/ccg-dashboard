@@ -121,9 +121,9 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
   <section class="strip">
     <div class="striphead"><span class="dot"></span> Today's Pulse — Spend &amp; ROI <span class="weekof" id="weekof"></span> <span class="when" id="when">connecting…</span></div>
     <div class="stats">
-      <div class="stat spend"><div class="lbl">Spend</div><div class="val" id="s-spend">—</div><div class="wk">this week</div></div>
+      <div class="stat spend"><div class="lbl">Spend</div><div class="val" id="s-spend">—</div><div class="wk" id="w-spend">today</div></div>
       <div class="stat sales"><div class="lbl">Sales</div><div class="val" id="s-sales">—</div><div class="wk" id="w-sales">today</div></div>
-      <div class="stat cpa"><div class="lbl">CPA</div><div class="val" id="s-cpa">—</div><div class="wk">this week</div></div>
+      <div class="stat cpa"><div class="lbl">CPA</div><div class="val" id="s-cpa">—</div><div class="wk" id="w-cpa">today</div></div>
       <div class="stat prem"><div class="lbl">Avg Premium</div><div class="val" id="s-prem">—</div><div class="wk" id="w-prem">today</div></div>
       <div class="stat roi"><div class="lbl">ROI</div><div class="val" id="s-roi">—</div><div class="wk" id="w-roi">this week</div></div>
     </div>
@@ -200,15 +200,20 @@ async function pulse(){
     if(!c){ document.getElementById("when").textContent="waiting for data"; return; }
     const set=(id,v)=>document.getElementById(id).textContent=v;
     const usd=(n,dec=0)=>"$"+n.toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec});
-    set("s-spend",usd(c.spend_wk));
+    // big number = today (~ marks estimates allocated from the weekly sheet),
+    // small line = week-to-date
+    const st=c.spend_today;
+    const pct=(n)=> (n>=0?"+":"")+Math.round(n)+"%";
+    set("s-spend",st!=null?"~"+usd(st):"—");
+    set("w-spend","wk "+usd(c.spend_wk));
     set("s-sales",fmt(c.deals_today));
     set("w-sales","wk "+fmt(c.deals_wk));
-    set("s-cpa",usd(c.cpa_wk_sheet));
+    set("s-cpa",st!=null&&c.deals_today?"~"+usd(st/c.deals_today):"—");
+    set("w-cpa","wk "+usd(c.cpa_wk_sheet));
     set("s-prem",c.deals_today?usd(c.prem_today/c.deals_today,0):"—");
     set("w-prem",c.deals_wk?"wk "+usd(c.prem_wk/c.deals_wk,0):"");
-    const roi=c.spend_wk>0?100*(c.rev_wk-c.spend_wk)/c.spend_wk:null;
-    set("s-roi",roi===null?"—":(roi>=0?"+":"")+Math.round(roi)+"%");
-    set("w-roi","wk · rev "+usd(c.rev_wk));
+    set("s-roi",st>0?"~"+pct(100*(c.rev_today-st)/st):"—");
+    set("w-roi",c.spend_wk>0?"wk "+pct(100*(c.rev_wk-c.spend_wk)/c.spend_wk):"");
     const ws=new Date(c.week_start+"T12:00:00");
     document.getElementById("weekof").textContent="· week of "+(ws.getMonth()+1)+"/"+ws.getDate();
     let when="live";
