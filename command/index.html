@@ -497,9 +497,12 @@ function render(){
 }
 
 /* ================= data loading + auto refresh =================
-   DATA_URL: the published-to-web CSV of the Sheet's DashData tab. When set,
-   data updates flow through Google Sheets (free) instead of Netlify deploys
-   (which cost credits). Empty string -> fetch local data.json (dev preview). */
+   PULSE_URL: the ccg-sales-feed Worker's /pulse endpoint — the pipeline POSTs
+   its full data.json there every cycle, so this is the freshest source and
+   avoids Google's publish-to-web cache (which also intermittently hangs).
+   DATA_URL: the published-to-web CSV of the Sheet's DashData tab (fallback).
+   Both empty -> fetch local data.json (dev preview). */
+const PULSE_URL = "https://ccg-sales-feed.adamgelvaninsurance.workers.dev/pulse";
 const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSXuRIJ7iOYNP8vqz4MTOHovQs8G061ee_CYp1cGV6Hyese3bSAxoUhgfWj7G1Nxrm0tUuzg3XWTPTp/pub?gid=801455380&single=true&output=csv";
 function parseCSV(text){
   const rows=[];let row=[],cur="",inq=false;
@@ -537,12 +540,20 @@ function csvToData(text){
 let countdown=60;
 async function loadData(first){
   try{
-    let d;
-    if(DATA_URL){
-      const res=await fetch(DATA_URL+(DATA_URL.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store"});
+    let d=null;
+    const t10=()=>typeof AbortSignal!=="undefined"&&AbortSignal.timeout?AbortSignal.timeout(10000):undefined;
+    if(PULSE_URL){
+      try{
+        const res=await fetch(PULSE_URL+"?t="+Date.now(),{cache:"no-store",signal:t10()});
+        if(res.ok){const j=await res.json();if(j&&Array.isArray(j.daily)&&j.daily.length)d=j;}
+      }catch(e){/* worker unreachable — fall through */}
+    }
+    if(!d&&DATA_URL){
+      const res=await fetch(DATA_URL+(DATA_URL.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store",signal:t10()});
       if(!res.ok)throw new Error(res.status);
       d=csvToData(await res.text());
-    }else{
+    }
+    if(!d){
       const res=await fetch("data.json?t="+Date.now(),{cache:"no-store"});
       if(!res.ok)throw new Error(res.status);
       d=await res.json();
