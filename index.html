@@ -214,7 +214,6 @@ async function pulse(){
     // big number = today (~ marks estimates allocated from the weekly sheet),
     // small line = week-to-date
     const st=c.spend_today;
-    const pct=(n)=> (n>=0?"+":"")+Math.round(n)+"%";
     set("s-spend",st!=null?"~"+usd(st):"—");
     set("w-spend","wk "+usd(c.spend_wk));
     set("s-sales",fmt(c.deals_today));
@@ -223,8 +222,10 @@ async function pulse(){
     set("w-cpa","wk "+usd(c.cpa_wk_sheet));
     set("s-prem",c.deals_today?usd(c.prem_today/c.deals_today,0):"—");
     set("w-prem",c.deals_wk?"wk "+usd(c.prem_wk/c.deals_wk,0):"");
-    set("s-roi",st>0?"~"+pct(100*(c.rev_today-st)/st):"—");
-    set("w-roi",c.spend_wk>0?"wk "+pct(100*(c.rev_wk-c.spend_wk)/c.spend_wk):"");
+    // ROI as a multiplier, matching the CPA sheet: revenue / spend (1.00X = break-even)
+    const mult=(rev,sp)=>(rev/sp).toFixed(2)+"X";
+    set("s-roi",st>0?"~"+mult(c.rev_today,st):"—");
+    set("w-roi",c.spend_wk>0?"wk "+mult(c.rev_wk,c.spend_wk):"");
     const ws=new Date(c.week_start+"T12:00:00");
     document.getElementById("weekof").textContent="· week of "+(ws.getMonth()+1)+"/"+ws.getDate();
     let when="live";
