@@ -600,6 +600,18 @@ let booted=false;
 function boot(){if(booted)return;booted=true;
   tickClock();setInterval(tickClock,1000);setInterval(tickRing,1000);loadData(true);}
 boot();
+
+/* auto-reload on new build: unattended tabs pick up shipped changes within ~5 min */
+(async()=>{
+  const get=async()=>{try{
+    const u=location.href.split("#")[0]+(location.search?"&":"?")+"_build="+Date.now();
+    const r=await fetch(u,{cache:"no-store"}); return r.ok?await r.text():null;
+  }catch(e){return null}};
+  const base=await get();
+  if(base) setInterval(async()=>{
+    const t=await get(); if(t&&t!==base) location.reload();
+  },5*60*1000);
+})();
 </script>
 </body>
 </html>
