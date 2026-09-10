@@ -77,10 +77,12 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.command::before{background:linear-gradient(90deg,var(--cyan),var(--purple))}
 .card.cpa::before{background:linear-gradient(90deg,var(--gold),var(--green))}
 .card.cpatv::before{background:linear-gradient(90deg,var(--green),var(--gold))}
+.card.dispo::before{background:linear-gradient(90deg,var(--purple),var(--cyan))}
 .card.octagon:hover,.card.warroom:hover{border-color:rgba(239,68,68,.45)}
 .card.command:hover{border-color:rgba(56,189,248,.45)}
 .card.cpa:hover{border-color:rgba(245,197,66,.45)}
 .card.cpatv:hover{border-color:rgba(52,211,153,.45)}
+.card.dispo:hover{border-color:rgba(167,139,250,.45)}
 .emblem{font-size:38px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
 .card h2{font-size:19px;letter-spacing:.08em;font-weight:800;text-transform:uppercase}
 .card .tag{font-size:10px;letter-spacing:.26em;text-transform:uppercase;margin-top:4px}
@@ -88,6 +90,7 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.command .tag{color:var(--cyan)}
 .card.cpa .tag{color:var(--gold)}
 .card.cpatv .tag{color:var(--green)}
+.card.dispo .tag{color:var(--purple)}
 .card p{color:var(--ink-2);font-size:13.5px;line-height:1.6;margin-top:12px;min-height:64px}
 .card .go{
   display:inline-flex;align-items:center;gap:8px;margin-top:16px;
@@ -172,6 +175,14 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
       <div class="tag">Office TV Board</div>
       <p>The big-screen CPA board — campaign spend, sales and cost-per-acquisition running full-screen on the office TV. Team sign-in required (Cloudflare Access).</p>
       <span class="go">OPEN TV BOARD <b>→</b></span>
+    </a>
+
+    <a class="card dispo" target="_blank" rel="noopener" href="dispositions/">
+      <div class="emblem">☎️</div>
+      <h2>Disposition Report</h2>
+      <div class="tag">Agent Call Outcomes</div>
+      <p>Every Convoso disposition by agent — sales, callbacks, hang-ups, DNCs and the rest, counted over any date range. Same ranges as the CPA dashboard.</p>
+      <span class="go">OPEN REPORT <b>→</b></span>
     </a>
 
   </section>

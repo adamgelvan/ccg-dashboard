@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>CCG — Disposition Report</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+<style>
+:root{
+  --bg:#07090d; --card:#0f141d; --card-2:#121927;
+  --line:rgba(148,163,184,.14); --ink:#e6edf6; --ink-2:#9fb0c3; --ink-3:#5b6b7f;
+  --red:#ef4444; --gold:#f5c542; --cyan:#38bdf8; --green:#34d399; --purple:#a78bfa;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100%}
+body{background:
+  radial-gradient(1100px 500px at 15% -10%, rgba(167,139,250,.07), transparent 60%),
+  radial-gradient(900px 500px at 90% 0%, rgba(56,189,248,.05), transparent 55%), var(--bg)}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.crest{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(145deg,#1a2333,#0d1320);border:1px solid var(--line)}
+h1{font-size:21px;letter-spacing:.1em;font-weight:800}
+h1 span{color:var(--purple)}
+.sub{color:var(--ink-3);font-size:11px;letter-spacing:.26em;text-transform:uppercase;margin-top:2px}
+.meta{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+a.back{color:var(--ink-2);text-decoration:none;font-family:var(--mono);font-size:12px}
+a.back:hover{color:var(--ink)}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--ink-2);padding:8px 14px;font-size:12.5px;cursor:pointer;
+  border-right:1px solid var(--line);white-space:nowrap;transition:all .15s}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:rgba(167,139,250,.14);color:var(--purple);font-weight:600}
+.custom{display:none;gap:8px;align-items:center}
+.custom.show{display:flex}
+.custom input{background:var(--card-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:7px 9px;font-family:var(--mono);font-size:12px;color-scheme:dark}
+.rangelabel{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em;margin-left:auto}
+
+.card{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);
+  border-radius:16px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 11px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);cursor:default}
+th[title]{cursor:help;text-decoration:underline dotted rgba(148,163,184,.4);text-underline-offset:3px}
+th.agent,td.agent{text-align:left;position:sticky;left:0;background:var(--card);z-index:1;font-weight:600}
+td{font-family:var(--mono);color:var(--ink-2)}
+td.agent{font-family:var(--sans);color:var(--ink)}
+td.total,th.total{color:var(--ink);font-weight:700;border-left:1px solid var(--line)}
+td.zero{color:#2c3a4d}
+tr:hover td{background:rgba(167,139,250,.05)}
+tr.teamrow td{border-top:2px solid rgba(167,139,250,.35);color:var(--ink);font-weight:700}
+td.sale{color:var(--green);font-weight:700}
+
+.legend{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:4px 22px;
+  font-size:11.5px;color:var(--ink-3)}
+.legend b{font-family:var(--mono);color:var(--ink-2);display:inline-block;min-width:64px}
+.empty{padding:40px;text-align:center;color:var(--ink-3)}
+@media(max-width:640px){.wrap{padding:18px 12px 40px}.meta{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="crest">📋</div>
+      <div>
+        <h1>DISPOSITION <span>REPORT</span></h1>
+        <div class="sub">Agent × Convoso Disposition Counts</div>
+      </div>
+    </div>
+    <div>
+      <div class="meta"><span id="updated">connecting…</span><br><a class="back" href="../">← CCG HQ</a></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="ranges">
+      <button data-r="today" class="on">Today</button>
+      <button data-r="yesterday">Yesterday</button>
+      <button data-r="thisweek">This Week</button>
+      <button data-r="lastweek">Last Week</button>
+      <button data-r="thismonth">This Month</button>
+      <button data-r="lastmonth">Last Month</button>
+      <button data-r="custom">Custom</button>
+    </div>
+    <div class="custom" id="customrange">
+      <input type="date" id="d1"> <span style="color:var(--ink-3)">→</span> <input type="date" id="d2">
+    </div>
+    <div class="rangelabel" id="rangelabel"></div>
+  </div>
+
+  <div class="card">
+    <div class="tablewrap" id="tablewrap"><div class="empty">Loading…</div></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+const DISPO_URL="https://ccg-sales-feed.adamgelvaninsurance.workers.dev/dispo";
+let DATA=null, range="today", custom1="", custom2="";
+
+/* ---- date helpers (Eastern, matching the pipeline's stored dates) ---- */
+function todayET(){
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York"}).format(new Date()); // YYYY-MM-DD
+}
+function addDays(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10)}
+function mondayOf(iso){const d=new Date(iso+"T12:00:00");const dow=(d.getDay()+6)%7;return addDays(iso,-dow)}
+function bounds(){
+  const t=todayET();
+  switch(range){
+    case "today":     return [t,t];
+    case "yesterday": {const y=addDays(t,-1);return [y,y]}
+    case "thisweek":  return [mondayOf(t),t];
+    case "lastweek":  {const m=mondayOf(t);return [addDays(m,-7),addDays(m,-1)]}
+    case "thismonth": return [t.slice(0,8)+"01",t];
+    case "lastmonth": {const first=t.slice(0,8)+"01";const lastEnd=addDays(first,-1);
+                       return [lastEnd.slice(0,8)+"01",lastEnd]}
+    case "custom":    return [custom1||t,custom2||t];
+  }
+}
+
+function render(){
+  if(!DATA) return;
+  const [lo,hi]=bounds();
+  document.getElementById("rangelabel").textContent=lo===hi?lo:`${lo} → ${hi}`;
+  const agents=new Map();            // agent -> Map(code->n)
+  const codeTotals=new Map();
+  for(const [d,a,s,n] of DATA.rows){
+    if(d<lo||d>hi) continue;
+    if(!agents.has(a)) agents.set(a,new Map());
+    const m=agents.get(a); m.set(s,(m.get(s)||0)+n);
+    codeTotals.set(s,(codeTotals.get(s)||0)+n);
+  }
+  const wrap=document.getElementById("tablewrap");
+  if(!agents.size){wrap.innerHTML='<div class="empty">No dispositions in this range.</div>';
+    document.getElementById("legend").innerHTML="";return}
+  // columns: dispositions by total desc; SALE pinned first if present
+  let codes=[...codeTotals.keys()].sort((a,b)=>codeTotals.get(b)-codeTotals.get(a));
+  if(codes.includes("SALE")) codes=["SALE",...codes.filter(c=>c!=="SALE")];
+  const names=DATA.names||{};
+  // rows: agents by grand total desc
+  const rows=[...agents.entries()].map(([a,m])=>({a,m,total:[...m.values()].reduce((x,y)=>x+y,0)}))
+    .sort((x,y)=>y.total-x.total);
+  const fmt=n=>n.toLocaleString("en-US");
+  let h='<table><thead><tr><th class="agent">Agent</th>';
+  for(const c of codes) h+=`<th title="${(names[c]||"").replace(/"/g,"&quot;")}">${c}</th>`;
+  h+='<th class="total">Total</th></tr></thead><tbody>';
+  for(const r of rows){
+    h+=`<tr><td class="agent">${r.a}</td>`;
+    for(const c of codes){
+      const v=r.m.get(c)||0;
+      h+=`<td class="${v===0?"zero":""}${c==="SALE"&&v>0?" sale":""}">${v?fmt(v):"·"}</td>`;
+    }
+    h+=`<td class="total">${fmt(r.total)}</td></tr>`;
+  }
+  h+='<tr class="teamrow"><td class="agent">TEAM</td>';
+  let grand=0;
+  for(const c of codes){const v=codeTotals.get(c)||0;grand+=v;
+    h+=`<td class="${c==="SALE"?"sale":""}">${fmt(v)}</td>`}
+  h+=`<td class="total">${fmt(grand)}</td></tr></tbody></table>`;
+  wrap.innerHTML=h;
+  document.getElementById("legend").innerHTML=
+    codes.map(c=>`<div><b>${c}</b> ${names[c]||"—"}</div>`).join("");
+}
+
+async function load(){
+  try{
+    const r=await fetch(DISPO_URL+"?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    DATA=await r.json();
+    const g=new Date(DATA.generated_at);
+    document.getElementById("updated").textContent="data updated "+
+      (isNaN(g)?"—":g.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:"America/New_York"}))+
+      " · refreshes every 60s";
+    render();
+  }catch(e){
+    document.getElementById("updated").textContent=DATA?"reconnecting…":"feed offline";
+  }
+}
+
+document.getElementById("ranges").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#ranges button").forEach(x=>x.classList.toggle("on",x===b));
+  range=b.dataset.r;
+  document.getElementById("customrange").classList.toggle("show",range==="custom");
+  if(range!=="custom"||(custom1&&custom2)) render();
+});
+document.getElementById("d1").addEventListener("change",e=>{custom1=e.target.value;if(custom1&&custom2)render()});
+document.getElementById("d2").addEventListener("change",e=>{custom2=e.target.value;if(custom1&&custom2)render()});
+
+load(); setInterval(load,60000);
+
+/* auto-reload on new build: unattended tabs pick up shipped changes within ~5 min */
+(async()=>{
+  const get=async()=>{try{
+    const u=location.href.split("#")[0]+(location.search?"&":"?")+"_build="+Date.now();
+    const r=await fetch(u,{cache:"no-store"}); return r.ok?await r.text():null;
+  }catch(e){return null}};
+  const base=await get();
+  if(base) setInterval(async()=>{
+    const t=await get(); if(t&&t!==base) location.reload();
+  },5*60*1000);
+})();
+</script>
+</body>
+</html>
