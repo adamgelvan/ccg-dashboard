@@ -50,7 +50,10 @@ a.back:hover{color:var(--ink)}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:8px 11px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
 th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);cursor:default}
-th[title]{cursor:help;text-decoration:underline dotted rgba(148,163,184,.4);text-underline-offset:3px}
+th[title]{text-decoration:underline dotted rgba(148,163,184,.4);text-underline-offset:3px}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink)}
+th.sorted{color:var(--purple)!important}
 th.agent,td.agent{text-align:left;position:sticky;left:0;background:var(--card);z-index:1;font-weight:600}
 td{font-family:var(--mono);color:var(--ink-2)}
 td.agent{font-family:var(--sans);color:var(--ink)}
@@ -107,6 +110,7 @@ td.sale{color:var(--green);font-weight:700}
 <script>
 const DISPO_URL="https://ccg-sales-feed.adamgelvaninsurance.workers.dev/dispo";
 let DATA=null, range="today", custom1="", custom2="";
+let sortKey="__total";   // "__total", or a disposition code — click a column header to sort by it
 
 /* ---- date helpers (Eastern, matching the pipeline's stored dates) ---- */
 function todayET(){
@@ -149,12 +153,14 @@ function render(){
   if(codes.includes("SALE")) codes=["SALE",...codes.filter(c=>c!=="SALE")];
   const names=DATA.names||{};
   // rows: agents by grand total desc
+  if(sortKey!=="__total"&&!codes.includes(sortKey)) sortKey="__total";
   const rows=[...agents.entries()].map(([a,m])=>({a,m,total:[...m.values()].reduce((x,y)=>x+y,0)}))
-    .sort((x,y)=>y.total-x.total);
+    .sort((x,y)=> sortKey==="__total" ? y.total-x.total
+                : (y.m.get(sortKey)||0)-(x.m.get(sortKey)||0) || y.total-x.total);
   const fmt=n=>n.toLocaleString("en-US");
   let h='<table><thead><tr><th class="agent">Agent</th>';
-  for(const c of codes) h+=`<th title="${(names[c]||"").replace(/"/g,"&quot;")}">${c}</th>`;
-  h+='<th class="total">Total</th></tr></thead><tbody>';
+  for(const c of codes) h+=`<th class="sortable${sortKey===c?" sorted":""}" data-sort="${c}" title="Sort by ${(names[c]||c).replace(/"/g,"&quot;")}">${c}${sortKey===c?" ▾":""}</th>`;
+  h+=`<th class="total sortable${sortKey==="__total"?" sorted":""}" data-sort="__total">Total${sortKey==="__total"?" ▾":""}</th></tr></thead><tbody>`;
   for(const r of rows){
     h+=`<tr><td class="agent">${r.a}</td>`;
     for(const c of codes){
@@ -188,6 +194,11 @@ async function load(){
   }
 }
 
+document.getElementById("tablewrap").addEventListener("click",e=>{
+  const th=e.target.closest("th.sortable"); if(!th) return;
+  sortKey=th.dataset.sort;
+  render();
+});
 document.getElementById("ranges").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
   document.querySelectorAll("#ranges button").forEach(x=>x.classList.toggle("on",x===b));
