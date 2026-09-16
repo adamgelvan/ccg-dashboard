@@ -690,6 +690,12 @@ window.CCG_HUB = {
           auth: true
         },
         {
+          label: "CPA Leaderboard",
+          url: "https://ccg-sales-feed.adamgelvaninsurance.workers.dev/tv",
+          desc: "The big-screen CPA board: campaign spend, sales and cost per acquisition.",
+          keywords: "cpa tv leaderboard office board big screen campaign spend standings"
+        },
+        {
           label: "CRM",
           url: "",
           desc: "Our customer system. Adam to add the link.",
