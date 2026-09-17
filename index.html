@@ -79,12 +79,14 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.cpatv::before{background:linear-gradient(90deg,var(--green),var(--gold))}
 .card.dispo::before{background:linear-gradient(90deg,var(--purple),var(--cyan))}
 .card.cswar::before{background:linear-gradient(90deg,var(--gold),var(--red))}
+.card.ledger::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
 .card.octagon:hover,.card.warroom:hover{border-color:rgba(239,68,68,.45)}
 .card.command:hover{border-color:rgba(56,189,248,.45)}
 .card.cpa:hover{border-color:rgba(245,197,66,.45)}
 .card.cpatv:hover{border-color:rgba(52,211,153,.45)}
 .card.dispo:hover{border-color:rgba(167,139,250,.45)}
 .card.cswar:hover{border-color:rgba(245,197,66,.45)}
+.card.ledger:hover{border-color:rgba(52,211,153,.45)}
 .emblem{font-size:38px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
 .card h2{font-size:19px;letter-spacing:.08em;font-weight:800;text-transform:uppercase}
 .card .tag{font-size:10px;letter-spacing:.26em;text-transform:uppercase;margin-top:4px}
@@ -94,6 +96,7 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.cpatv .tag{color:var(--green)}
 .card.dispo .tag{color:var(--purple)}
 .card.cswar .tag{color:var(--gold)}
+.card.ledger .tag{color:var(--green)}
 .card p{color:var(--ink-2);font-size:13.5px;line-height:1.6;margin-top:12px;min-height:64px}
 .card .go{
   display:inline-flex;align-items:center;gap:8px;margin-top:16px;
@@ -194,6 +197,14 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
       <div class="tag">Customer Service Payments</div>
       <p>Where the service team logs client payments, books payment appointments and keeps notes — Friday-to-Thursday KO leaderboard, live feed, HighLevel automations. Sign in with your War Room login; the Admin tab has the payment export.</p>
       <span class="go">ENTER THE CS WAR ROOM <b>→</b></span>
+    </a>
+
+    <a class="card ledger" target="_blank" rel="noopener" href="https://claude.ai/artifact/Sufy6ZzkmkQ3JQnMeRa9Am">
+      <div class="emblem">🧭</div>
+      <h2>The Ledger</h2>
+      <div class="tag">Persistency &amp; Commissions</div>
+      <p>Retention by agent, campaign, payment method and sale month; first-payment failures with a follow-up list; the weekly commission audit, reserve tracker and chargeback forecast. Owner and managers only — sign in with your Claude account.</p>
+      <span class="go">OPEN THE LEDGER <b>→</b></span>
     </a>
 
   </section>
