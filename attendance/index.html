@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>CCG — Attendance</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗓️</text></svg>">
+<style>
+:root{
+  --bg:#07090d; --card:#0f141d; --card-2:#121927;
+  --line:rgba(148,163,184,.14); --ink:#e6edf6; --ink-2:#9fb0c3; --ink-3:#5b6b7f;
+  --red:#ef4444; --gold:#f5c542; --cyan:#38bdf8; --green:#34d399; --purple:#a78bfa;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100%}
+body{background:
+  radial-gradient(1100px 500px at 15% -10%, rgba(56,189,248,.07), transparent 60%),
+  radial-gradient(900px 500px at 90% 0%, rgba(52,211,153,.05), transparent 55%), var(--bg)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.crest{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:24px;
+  background:linear-gradient(145deg,#1a2333,#0d1320);border:1px solid var(--line)}
+h1{font-size:21px;letter-spacing:.1em;font-weight:800}
+h1 span{color:var(--cyan)}
+.sub{color:var(--ink-3);font-size:11px;letter-spacing:.26em;text-transform:uppercase;margin-top:2px}
+.meta{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+a.back{color:var(--ink-2);text-decoration:none;font-family:var(--mono);font-size:12px}
+a.back:hover{color:var(--ink)}
+
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.cycle{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px}
+.cycle button{background:none;border:0;color:var(--ink-2);font-size:16px;padding:6px 12px;cursor:pointer;border-radius:7px}
+.cycle button:hover:not(:disabled){background:rgba(56,189,248,.12);color:var(--ink)}
+.cycle button:disabled{opacity:.25;cursor:default}
+.cycle .lbl{font-family:var(--mono);font-size:13px;min-width:270px;text-align:center;color:var(--ink)}
+.cycle .lbl small{display:block;font-size:10px;color:var(--ink-3);letter-spacing:.15em;text-transform:uppercase}
+.btn{background:var(--card);border:1px solid var(--line);color:var(--ink-2);border-radius:10px;padding:8px 14px;
+  font-size:12.5px;cursor:pointer;font-family:var(--sans)}
+.btn:hover{color:var(--ink);border-color:rgba(148,163,184,.3)}
+.btn.on{color:var(--cyan);border-color:rgba(56,189,248,.4)}
+.sel{background:var(--card-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:7px 10px;font-family:var(--mono);font-size:12px;color-scheme:dark;cursor:pointer}
+.rule{font-family:var(--mono);font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:6px;margin-left:auto}
+
+.card{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);
+  border-radius:16px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 12px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+th small{display:block;font-size:9.5px;letter-spacing:.05em;color:var(--ink-3);text-transform:none;font-family:var(--mono)}
+th.agent,td.agent{text-align:left;font-weight:600;position:sticky;left:0;background:var(--card);z-index:1}
+td.agent{color:var(--ink)}
+td.agent .hide{opacity:0;margin-left:8px;color:var(--ink-3);cursor:pointer;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+tr:hover td.agent .hide{opacity:1}
+td.agent .hide:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+td.day{font-family:var(--mono);cursor:help}
+td.present{color:var(--green);font-weight:700}
+td.low{color:var(--gold)}
+td.absent{color:#2c3a4d}
+td.future{color:#1c2533}
+td.today-col,th.today-col{background:rgba(56,189,248,.05)}
+td.days,th.days{border-left:1px solid var(--line);font-family:var(--mono);font-weight:800;color:var(--ink);font-size:15px}
+tr.teamrow td{border-top:2px solid rgba(56,189,248,.35);color:var(--ink);font-weight:700}
+tr:hover td{background:rgba(56,189,248,.04)}
+.foot{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:var(--ink-3);align-items:center}
+.foot b{color:var(--ink-2)}
+.chip{display:inline-block;padding:1px 8px;border-radius:6px;font-family:var(--mono);font-size:11px}
+.chip.g{color:var(--green);background:rgba(52,211,153,.1)}.chip.a{color:var(--gold);background:rgba(245,197,66,.1)}.chip.n{color:#5b6b7f;background:rgba(91,107,127,.15)}
+.empty{padding:40px;text-align:center;color:var(--ink-3)}
+@media(max-width:640px){.wrap{padding:18px 12px 40px}.meta{display:none}.cycle .lbl{min-width:180px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="crest">🗓️</div>
+      <div>
+        <h1>ATTENDANCE <span>BY PAY CYCLE</span></h1>
+        <div class="sub">Convoso Dialer Activity · Friday – Thursday</div>
+      </div>
+    </div>
+    <div><div class="meta"><span id="updated">connecting…</span><br><a class="back" href="../">← CCG HQ</a></div></div>
+  </header>
+
+  <div class="controls">
+    <div class="cycle">
+      <button id="prev" title="Previous pay cycle">◀</button>
+      <div class="lbl" id="cyclelbl">—<small>pay cycle</small></div>
+      <button id="next" title="Next pay cycle">▶</button>
+      <button id="now" title="Jump to current cycle" style="font-size:12px">Today</button>
+    </div>
+    <button class="btn" id="showhidden">Hidden: 0</button>
+    <button class="btn" id="export">⬇ Export CSV</button>
+    <div class="rule">Present when dispositions are more than
+      <select id="thresh" class="sel"><option>1</option><option>3</option><option selected>5</option><option>10</option><option>20</option></select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tablewrap" id="tablewrap"><div class="empty">Loading…</div></div>
+    <div class="foot">
+      <span><span class="chip g">✓ 128</span> present — number = dispositions that day</span>
+      <span><span class="chip a">· 3</span> below threshold — dialed, but not enough to count</span>
+      <span><span class="chip n">—</span> no activity</span>
+      <span>Hover a day for first/last call time and talk minutes · weekdays only (Fri, Mon–Thu) · Eastern time</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const URL_ATT="https://ccg-sales-feed.adamgelvaninsurance.workers.dev/attendance";
+const HIDE_KEY="ccg-attendance-hidden-v1";
+let DATA=null, byKey=new Map(), firstDate=null, cycleOffset=0, showHidden=false;
+let threshold=5;
+let hidden=new Set(); try{ hidden=new Set(JSON.parse(localStorage.getItem(HIDE_KEY)||"[]")); }catch(e){}
+
+/* ---- dates (Eastern; the pipeline stores call dates in Eastern) ---- */
+const todayET=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York"}).format(new Date());
+const addDays=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const dow=iso=>new Date(iso+"T12:00:00").getDay();           // 0=Sun … 5=Fri
+const fridayOnOrBefore=iso=>addDays(iso,-((dow(iso)-5+7)%7));   // pay cycle starts Friday
+const fmt=iso=>new Date(iso+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+const DAYNAMES=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function cycleFor(offset){
+  const start=addDays(fridayOnOrBefore(todayET()), offset*7);
+  const end=addDays(start,6);                                      // Thursday
+  const days=[];for(let i=0;i<7;i++){const d=addDays(start,i);const w=dow(d);if(w!==0&&w!==6)days.push(d);} // Fri, Mon–Thu
+  return {start,end,days};
+}
+const firstName=n=>n.trim().split(/\s+/)[0].toLowerCase();
+
+function render(){
+  if(!DATA) return;
+  const today=todayET();
+  const cyc=cycleFor(cycleOffset);
+  const isCurrent=cycleOffset===0;
+  document.getElementById("cyclelbl").innerHTML=
+    `${fmt(cyc.start)} – ${fmt(cyc.end)}${isCurrent?" · current":""}<small>pay cycle · Fri – Thu</small>`;
+  document.getElementById("next").disabled=isCurrent;
+  document.getElementById("prev").disabled=!firstDate||addDays(cyc.start,-1)<firstDate;   // previous cycle would end before the data starts
+  document.getElementById("showhidden").textContent=`Hidden: ${hidden.size}${showHidden?" (showing)":""}`;
+  document.getElementById("showhidden").classList.toggle("on",showHidden);
+
+  // agents active in this cycle (any activity on any day, weekends included, so a Saturday-only agent is still visible)
+  const agents=new Set();
+  for(let i=0;i<7;i++){const d=addDays(cyc.start,i); for(const [k,v] of byKey){ if(k.startsWith(d+"|")) agents.add(k.slice(11)); }}
+  const rows=[...agents].filter(a=>showHidden||!hidden.has(a))
+    .sort((a,b)=>firstName(a).localeCompare(firstName(b))||a.localeCompare(b));
+
+  const wrap=document.getElementById("tablewrap");
+  if(!rows.length){wrap.innerHTML='<div class="empty">No dialer activity in this pay cycle.</div>';return}
+
+  let h='<table><thead><tr><th class="agent">Agent</th>';
+  for(const d of cyc.days) h+=`<th class="${d===today?"today-col":""}">${DAYNAMES[dow(d)]}<small>${fmt(d)}</small></th>`;
+  h+='<th class="days">Days<small>of '+cyc.days.filter(d=>d<=today).length+' so far</small></th></tr></thead><tbody>';
+  const colTotals=cyc.days.map(()=>0); let grand=0;
+  for(const a of rows){
+    let days=0;
+    h+=`<tr><td class="agent">${a}${hidden.has(a)?' <span class="chip n">hidden</span>':''}<span class="hide" data-a="${a.replace(/"/g,"&quot;")}" title="${hidden.has(a)?"Unhide":"Hide from attendance"}">${hidden.has(a)?"unhide":"hide"}</span></td>`;
+    cyc.days.forEach((d,i)=>{
+      const v=byKey.get(d+"|"+a);
+      const tc=d===today?" today-col":"";
+      if(d>today){h+=`<td class="day future${tc}">·</td>`;return}
+      if(!v){h+=`<td class="day absent${tc}" title="No dialer activity">—</td>`;return}
+      const tip=`${v.n} dispositions · first call ${v.first} · last call ${v.last} · ${v.talk} min talk`;
+      if(v.n>threshold){days++;colTotals[i]++;h+=`<td class="day present${tc}" title="${tip}">✓ ${v.n}</td>`}
+      else h+=`<td class="day low${tc}" title="${tip} — below threshold">· ${v.n}</td>`;
+    });
+    grand+=days;
+    h+=`<td class="days">${days}</td></tr>`;
+  }
+  h+='<tr class="teamrow"><td class="agent">AGENTS PRESENT</td>';
+  cyc.days.forEach((d,i)=>h+=`<td class="day">${d>today?"·":colTotals[i]}</td>`);
+  h+=`<td class="days">${grand}</td></tr></tbody></table>`;
+  wrap.innerHTML=h;
+}
+
+async function load(){
+  try{
+    const r=await fetch(URL_ATT+"?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    DATA=await r.json();
+    byKey=new Map();
+    for(const [d,a,n,first,last,talk] of DATA.rows){ byKey.set(d+"|"+a,{n,first,last,talk}); if(!firstDate||d<firstDate) firstDate=d; }
+    const g=new Date(DATA.generated_at);
+    document.getElementById("updated").textContent="data updated "+(isNaN(g)?"—":g.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/New_York"}))+" · history from "+fmt(firstDate);
+    render();
+  }catch(e){ document.getElementById("updated").textContent=DATA?"reconnecting…":"feed offline"; }
+}
+
+document.getElementById("prev").onclick=()=>{cycleOffset--;render()};
+document.getElementById("next").onclick=()=>{cycleOffset++;render()};
+document.getElementById("now").onclick=()=>{cycleOffset=0;render()};
+document.getElementById("thresh").onchange=e=>{threshold=+e.target.value;render()};
+document.getElementById("showhidden").onclick=()=>{showHidden=!showHidden;render()};
+document.getElementById("tablewrap").addEventListener("click",e=>{
+  const b=e.target.closest(".hide"); if(!b) return;
+  const a=b.dataset.a; hidden.has(a)?hidden.delete(a):hidden.add(a);
+  try{localStorage.setItem(HIDE_KEY,JSON.stringify([...hidden]))}catch(err){}
+  render();
+});
+document.getElementById("export").onclick=()=>{
+  const cyc=cycleFor(cycleOffset), today=todayET();
+  const agents=new Set(); for(let i=0;i<7;i++){const d=addDays(cyc.start,i);for(const k of byKey.keys()) if(k.startsWith(d+"|")) agents.add(k.slice(11));}
+  const rows=[...agents].filter(a=>!hidden.has(a)).sort((a,b)=>firstName(a).localeCompare(firstName(b)));
+  const lines=[["Agent",...cyc.days.map(d=>DAYNAMES[dow(d)]+" "+d),"Days present"].join(",")];
+  for(const a of rows){
+    let days=0; const cells=cyc.days.map(d=>{const v=byKey.get(d+"|"+a); if(!v||d>today) return ""; if(v.n>threshold) days++; return v.n;});
+    lines.push([`"${a}"`,...cells,days].join(","));
+  }
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"}); const u=URL.createObjectURL(blob);
+  const link=document.createElement("a"); link.href=u; link.download=`attendance_${cyc.start}_to_${cyc.end}.csv`; link.click(); URL.revokeObjectURL(u);
+};
+
+load(); setInterval(load,5*60*1000);
+
+/* auto-reload on new build: unattended tabs pick up shipped changes within ~5 min */
+(async()=>{
+  const get=async()=>{try{const u=location.href.split("#")[0]+(location.search?"&":"?")+"_build="+Date.now();
+    const r=await fetch(u,{cache:"no-store"});return r.ok?await r.text():null}catch(e){return null}};
+  const base=await get(); if(base) setInterval(async()=>{const t=await get();if(t&&t!==base)location.reload()},5*60*1000);
+})();
+</script>
+</body>
+</html>

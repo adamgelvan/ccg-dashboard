@@ -78,6 +78,7 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.cpa::before{background:linear-gradient(90deg,var(--gold),var(--green))}
 .card.cpatv::before{background:linear-gradient(90deg,var(--green),var(--gold))}
 .card.dispo::before{background:linear-gradient(90deg,var(--purple),var(--cyan))}
+.card.attend::before{background:linear-gradient(90deg,var(--cyan),var(--green))}
 .card.cswar::before{background:linear-gradient(90deg,var(--gold),var(--red))}
 .card.ledger::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
 .card.octagon:hover,.card.warroom:hover{border-color:rgba(239,68,68,.45)}
@@ -85,6 +86,7 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.cpa:hover{border-color:rgba(245,197,66,.45)}
 .card.cpatv:hover{border-color:rgba(52,211,153,.45)}
 .card.dispo:hover{border-color:rgba(167,139,250,.45)}
+.card.attend:hover{border-color:rgba(56,189,248,.45)}
 .card.cswar:hover{border-color:rgba(245,197,66,.45)}
 .card.ledger:hover{border-color:rgba(52,211,153,.45)}
 .emblem{font-size:38px;line-height:1;margin-bottom:14px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
@@ -95,6 +97,7 @@ a.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;opacity:
 .card.cpa .tag{color:var(--gold)}
 .card.cpatv .tag{color:var(--green)}
 .card.dispo .tag{color:var(--purple)}
+.card.attend .tag{color:var(--cyan)}
 .card.cswar .tag{color:var(--gold)}
 .card.ledger .tag{color:var(--green)}
 .card p{color:var(--ink-2);font-size:13.5px;line-height:1.6;margin-top:12px;min-height:64px}
@@ -189,6 +192,14 @@ footer span::before{content:"◆ ";color:var(--ink-3)}
       <div class="tag">Agent Call Outcomes</div>
       <p>Every Convoso disposition by agent — sales, callbacks, hang-ups, DNCs and the rest, counted over any date range. Same ranges as the CPA dashboard.</p>
       <span class="go">OPEN REPORT <b>→</b></span>
+    </a>
+
+    <a class="card attend" target="_blank" rel="noopener" href="attendance/">
+      <div class="emblem">🗓️</div>
+      <h2>Attendance</h2>
+      <div class="tag">By Pay Cycle · Fri – Thu</div>
+      <p>Who was on the dialer each day, straight from Convoso — days present per agent for any pay cycle, with the disposition evidence behind every check mark. Step back through past cycles anytime.</p>
+      <span class="go">OPEN ATTENDANCE <b>→</b></span>
     </a>
 
     <a class="card cswar" target="_blank" rel="noopener" href="https://ccg-cs-warroom.adamgelvaninsurance.workers.dev/">
