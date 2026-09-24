@@ -169,7 +169,8 @@ function render(){
       const tc=d===today?" today-col":"";
       if(d>today){h+=`<td class="day future${tc}">·</td>`;return}
       if(!v){h+=`<td class="day absent${tc}" title="No dialer activity">—</td>`;return}
-      const tip=`${v.n} dispositions · first call ${v.first} · last call ${v.last} · ${v.talk} min talk`;
+      const tip=v.first?`${v.n} dispositions · first call ${v.first} · last call ${v.last} · ${v.talk} min talk`
+                       :`${v.n} dispositions (live dialer feed — call times arrive with the next attendance sync)`;
       if(v.n>threshold){days++;colTotals[i]++;h+=`<td class="day present${tc}" title="${tip}">✓ ${v.n}</td>`}
       else h+=`<td class="day low${tc}" title="${tip} — below threshold">· ${v.n}</td>`;
     });
@@ -182,15 +183,32 @@ function render(){
   wrap.innerHTML=h;
 }
 
+/* Two sources, merged:
+   1) /attendance — per agent-day with first/last call + talk minutes (full history).
+   2) /dispo      — the live disposition feed (rolling 90 days, refreshed every
+      5 min by the pipeline). Any day newer than the /attendance snapshot is
+      filled from here, so attendance is current even if the attendance push
+      hasn't run yet. Those days show counts only (no first/last time). */
+const URL_DISPO="https://ccg-sales-feed.adamgelvaninsurance.workers.dev/dispo";
 async function load(){
   try{
-    const r=await fetch(URL_ATT+"?t="+Date.now(),{cache:"no-store"});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    DATA=await r.json();
-    byKey=new Map();
-    for(const [d,a,n,first,last,talk] of DATA.rows){ byKey.set(d+"|"+a,{n,first,last,talk}); if(!firstDate||d<firstDate) firstDate=d; }
-    const g=new Date(DATA.generated_at);
-    document.getElementById("updated").textContent="data updated "+(isNaN(g)?"—":g.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/New_York"}))+" · history from "+fmt(firstDate);
+    const [ra,rd]=await Promise.all([
+      fetch(URL_ATT+"?t="+Date.now(),{cache:"no-store"}),
+      fetch(URL_DISPO+"?t="+Date.now(),{cache:"no-store"}).catch(()=>null)]);
+    if(!ra.ok) throw new Error("HTTP "+ra.status);
+    DATA=await ra.json();
+    byKey=new Map(); let lastAtt="";
+    for(const [d,a,n,first,last,talk] of DATA.rows){ byKey.set(d+"|"+a,{n,first,last,talk}); if(!firstDate||d<firstDate) firstDate=d; if(d>lastAtt) lastAtt=d; }
+    let liveNote="", newest=DATA.generated_at;
+    if(rd&&rd.ok){
+      const dd=await rd.json(); const rows=dd.rows2||dd.rows||[];
+      const add=new Map();
+      for(const r of rows){ const d=r[0],a=r[1],n=r[r.length-1]; if(d<=lastAtt) continue; const k=d+"|"+a; add.set(k,(add.get(k)||0)+n); }
+      for(const [k,n] of add){ if(!byKey.has(k)) byKey.set(k,{n,first:null,last:null,talk:null}); }
+      if(add.size){ liveNote=" · "+fmt(addDays(lastAtt,1))+" onward from live dialer feed"; if(dd.generated_at>newest) newest=dd.generated_at; }
+    }
+    const g=new Date(newest);
+    document.getElementById("updated").textContent="data updated "+(isNaN(g)?"—":g.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZone:"America/New_York"}))+" · history from "+fmt(firstDate)+liveNote;
     render();
   }catch(e){ document.getElementById("updated").textContent=DATA?"reconnecting…":"feed offline"; }
 }
